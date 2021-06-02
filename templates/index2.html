@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="" />
+        <meta name="author" content="" />
+        <title>Armaggedon</title>
+        <!-- Favicon-->
+        <link rel="icon" type="image/x-icon" href="static/assets/misil.ico" />
+        <!-- Bootstrap Icons-->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css" rel="stylesheet" />
+        <!-- Google fonts-->
+        <link href="https://fonts.googleapis.com/css?family=Merriweather+Sans:400,700" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic" rel="stylesheet" type="text/static/css" />
+        <!-- SimpleLightbox plugin CSS-->
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/SimpleLightbox/2.1.0/simpleLightbox.min.css" rel="stylesheet" />
+        <!-- CSS -->
+        <link href="static/css/styles.css" rel="stylesheet" />
+        <!--Boostrap 5.0.1 (necesario para diapositivas y validacion)-->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
+        <!-- Script validacion -->
+        <script src="static/js/validacion.js"></script>
+        
+        
+
+        <!-- Babylon.js -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.2/dat.gui.min.js"></script>
+        <script src="https://preview.babylonjs.com/ammo.js"></script>
+        <script src="https://preview.babylonjs.com/cannon.js"></script>
+        <script src="https://preview.babylonjs.com/Oimo.js"></script>
+        <script src="https://preview.babylonjs.com/earcut.min.js"></script>
+        <script src="https://preview.babylonjs.com/babylon.js"></script>
+        <script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+        <script src="https://preview.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
+        <script src="https://preview.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+        <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+        <script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+        <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+        <script src="https://preview.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+
+        <!-- Conexion Servidor -->
+        <script type="text/javascript" src="https://me.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=pw5CFGrjxkYJC0aW-Z9UYg7EnJlhSQP7zn0QOx5YzFfAvpaerGfHx-0mcHfmjQrZEFEDsk2g0J9sO8aoH_y6xeH_N61E4qELlFRDc4V_y4EvwVvsCyunsaRbYVld-u9NK3mV3lauBbhWAp9Bpr0a1baky4P2dGFbJZIVhmtvJhxBvGD6l0f8c6If-ewQm7fyWQTfhrGPTWF_nlDjLeLjvs7InqGnj3PjmxkIEMPLMGPrIzALHevjy3pXR7mVWgDFwPjgkMQFQS_ZHePaKJURo5ItkrCRg3f3hYSausybvF1X3h6Tp8jeMbZGY9oH51Wch4gK1LbT3jDzgym-2RIwJzakw1XCO5JuMi0mpcGWDSTsI61hR3NqXhHLxlqovgUjYuMDOLANPgJs0FwtoY-pShaIWUvkSHRseub3htUs9d4zI4vrSm4uyYgoEG769BrU2VWlj_t36ZFZGlQX3hXC8Q" charset="UTF-8"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js" integrity="sha512-aMGMvNYu8Ue4G+fHa359jcPb1u+ytAF+P2SCb+PxrjCdO3n3ZTxJ30zuH39rimUggmTwmh2u7wvQsDTHESnmfQ==" crossorigin="anonymous"></script>
+        <script type="text/javascript" charset="utf-8">
+
+        var MatrizMovimiento = [];
+        var PuntodeImpacto = [];
+        var trayectoriamisil = [];
+        var Orix = [];
+        var Oriy = [];
+        var Oriz = [];
+
+        $(document).ready(function() {
+            var socket = io();
+            
+            socket.on('connect', function() {
+                socket.emit('my event', {data: 'I\'m connected!'});
+            });
+            
+            socket.on('my_response', function(msg, cb) {
+                
+                 PuntodeImpacto=msg.impacto;
+                 MatrizMovimiento=msg.pos_meteo;
+                 trayectoriamisil=msg.pos_misil;
+                 Orix=msg.dir_x;
+                 Oriy=msg.dir_y;
+                 Oriz=msg.dir_z;
+                 
+                 Orix[Orix.length]=Orix[Orix.length-1];  
+                 Oriy[Oriy.length]=Oriy[Oriy.length-1]; 
+                 Oriz[Oriz.length]=Oriz[Oriz.length-1];      
+
+                if (cb)
+                    cb();
+            });
+
+            $('form#emit').submit(function(event) {
+                socket.emit('my_event', {x0: $('#emit_data1').val(), y0: $('#emit_data2').val(), z0: $('#emit_data3').val(),  v0: $('#emit_data4').val()});
+                
+                return false;
+            });
+        });    
+    </script>
+        
+
+        
+    </head>
+    <body id="page-top">
+        <!-- Barra de navegacion-->
+        <nav class="navbar navbar-expand-lg navbar-light fixed-top py-3" id="mainNav">
+            <div class="container px-4 px-lg-5">
+                <a class="navbar-brand" href="#page-top">Armaggedon</a>
+                <button class="navbar-toggler navbar-toggler-right" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+                <div class="collapse navbar-collapse" id="navbarResponsive">
+                    <ul class="navbar-nav ms-auto my-2 my-lg-0">
+                        <li class="nav-item"><a class="nav-link" href="#page-top">Página principal</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#simulacion">Simulación</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#proyecto">Sobre el proyecto</a></li>
+                        <li class="nav-item"><a class="nav-link" href="https://github.com/ArmageddonUPM/ArmageddonUPM">Github del proyecto</a></li>
+                        <li class="nav-item"><input type="checkbox" name="un-mute" id="un-mute"><label for="un-mute" class="unmute"><img src="http://upload.wikimedia.org/wikipedia/commons/3/3f/Mute_Icon.svg" alt="" width="20px" height="20px" ></label><label for="un-mute" class="mute"><img src="http://upload.wikimedia.org/wikipedia/commons/2/21/Speaker_Icon.svg" alt="" width="20px" height="20px" ></label></li>
+                        
+                           
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <!-- Página principal-->
+        <header class="masthead" id="page-top">
+            <div class="container px-4 px-lg-5 h-100">
+                <div class="row gx-4 gx-lg-5 h-100 align-items-center justify-content-center text-center">
+                    <div class="col-lg-8 align-self-end">
+                        <h1 class="text-white font-weight-bold">Bienvenidos a Proyecto Armaggedon</h1>
+                        <hr class="divider divider-light" />
+                    </div>
+                    <div class="col-lg-8 align-self-baseline">
+                        <p class="text-white-75 mb-5">Progama de cálculo de trayectorias óptimas de misiles</p>
+                        <a class="btn btn-primaryy btn-xl text-white" href="#simulacion">Comenzar!</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <!-- Introduccion de datos-->
+        <section class="page-section bg-primaryy" id="simulacion">
+            <div class="container px-4 px-lg-5">
+                <div class="row gx-4 gx-lg-5 justify-content-center">
+                    <div class="col-lg-8 text-center">
+                        <h2 class="text-white mt-0">Introducción de datos</h2>
+                        <hr class="divider divider-light" />
+                        
+                    </div>
+                </div>
+                <!--Informacion datos-->
+                <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+                    <symbol id="check-circle-fill" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                    </symbol>
+                    <symbol id="info-fill" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+                    </symbol>
+                    <symbol id="exclamation-triangle-fill" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                    </symbol>
+                  </svg>
+                  
+                  <div class="alert alert-primary d-flex align-items-center alert-dismissible fade show" role="alert">
+                    <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Info:"><use xlink:href="#info-fill"/></svg>
+                    <div>
+                      <p>Importante: La tierra está posicionada en el origen del sistema de coordenadas XYZ. Para las posiciones del meteorito se admiten valores negativos y positivos pero siempre distancias superiores a 30000 km.</p>
+                      <p>La velocidad del meteorito tiene que ser coherente con la distancia a la que este se encuentra respecto a la Tierra, pudiendo tener valores de velocidad más grandes cuanto más lejos se encuentre inicialmente.</p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </div>
+                <div class="row gx-4 gx-lg-5 justify-content-center mb-5">
+                    <div class="col-lg-6">
+                        <form id="emit" method="POST" action='#'>
+                            <p class="text-muted mb-5">Posición inicial del meteorito (km)</p>
+                            <div class="form-floating mb-3">
+                                <input class="form-control" name="emit_data1" id="emit_data1"  placeholder="Posicion X" minlength="5" type="text" required />
+                                <label for="emit_data1">Posición X</label>
+                            </div>
+                            <div class="form-floating mb-3">
+                                <input class="form-control" name="emit_data2" id="emit_data2"  placeholder="Posicion Y" minlength="5" type="text" required />
+                                <label for="emit_data2">Posición Y</label>
+                            </div>
+                            <div class="form-floating mb-3">
+                                <input class="form-control" name="emit_data3" id="emit_data3"  placeholder="Posicion Z" minlength="5" type="text" required/>
+                                <label for="emit_data3">Posición Z</label>
+                            </div>
+                            <p class="text-muted mb-5">Velocidad del meteorito (km/s)</p>
+                            <div class="form-floating mb-3">
+                                <input class="form-control" name="emit_data4" id="emit_data4"  placeholder="Velocidad" type="number" min="1" max="15" required />
+                                <label for="emit_data4">Velocidad</label>
+                            </div>
+                            <div class="row gx-4 gx-lg-5 justify-content-center">
+                                <div class="col-lg-8 text-center">
+                                   
+                                      <!--<input type="submit" id="botonn" value="Submit">--> 
+                                      <input class="btn btn-light btn-xl submit" type="submit" id="botonn" >  
+                                      <a class="btn btn-light btn-xl" type="input" id="boton" href="#animacion">Calcular</a> 
+                                       
+                                   
+                                </div>
+                                
+                            </div>
+                        </form>
+                      
+                    </div>
+                        
+                    </div>
+                </div>
+                
+            </div>
+        </section>
+            </div>
+        </section>
+        <!-- Animacion-->
+     <section class="page-section" id="animacion">
+        <div class="container px-4 px-lg-5">
+            <div class="row gx-4 gx-lg-5 justify-content-center">
+                <div class="col-lg-8 col-xl-6 text-center">
+                    <h2 class="mt-0">Animación</h2>
+                     <hr class="divider divider-dark" />
+                    
+                </div>
+               
+            </div>
+            <div class="row gx-4 gx-lg-5 justify-content-center mb-5">
+                <div class="col-xl-12 col-lg-12">
+                  
+                    <canvas id="renderCanvas"></canvas>
+                 <!--Meter elemento canvas-->
+                </div>
+            </div>
+            
+        </div>
+    </section>
+         <!-- Sobre el proyecto-->
+                 <!-- Plantilla-->
+        <section class="page-section bg-primaryy" id="proyecto">
+            <div class="container">
+                <div class="row gx-4 gx-lg-5 justify-content-center">
+                    <div class="col-lg-8 text-center">
+                        <h2 class="text-white mt-0">Sobre el proyecto</h2>
+                        <hr class="divider divider-light" />
+                        
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-6 col-sm-6 mb-4">
+                        <!-- Portfolio item 1-->
+                        <div class="portfolio-item">
+                            <a class="portfolio-link" data-bs-toggle="modal" href="#portfolioModal1">
+                                <div class="portfolio-hover">
+                                    <div class="portfolio-hover-content"><i class="fas fa-plus fa-3x"></i></div>
+                                </div>
+                                <img class="img-fluid" src="static/assets/img/portfolio/1.JPG" alt="..." />
+                            </a>
+                            <!--<div class="portfolio-caption">
+                                <div class="portfolio-caption-heading">Planteamiento</div>
+                                
+                            </div>-->
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-sm-6 mb-4">
+                        <!-- Portfolio item 2-->
+                        <div class="portfolio-item">
+                            <a class="portfolio-link" data-bs-toggle="modal" href="#portfolioModal2">
+                                <div class="portfolio-hover">
+                                    <div class="portfolio-hover-content"><i class="fas fa-plus fa-3x"></i></div>
+                                </div>
+                                <img class="img-fluid" src="static/assets/img/portfolio/2.JPG" alt="..." />
+                            </a>
+                            <!--<div class="portfolio-caption">
+                                <div class="portfolio-caption-heading">Back-end</div>
+                                
+                            </div>-->
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-sm-6 mb-4">
+                        <!-- Portfolio item 3-->
+                        <div class="portfolio-item">
+                            <a class="portfolio-link" data-bs-toggle="modal" href="#portfolioModal3">
+                                <div class="portfolio-hover">
+                                    <div class="portfolio-hover-content"><i class="fas fa-plus fa-3x"></i></div>
+                                </div>
+                                <img class="img-fluid" src="static/assets/img/portfolio/3.JPG" alt="..." />
+                            </a>
+                            <!--<div class="portfolio-caption">
+                                <div class="portfolio-caption-heading">Front-end</div>
+                               
+                            </div>-->
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-sm-6 mb-4">
+                        <!-- Portfolio item 4-->
+                        <div class="portfolio-item">
+                            <a class="portfolio-link" data-bs-toggle="modal" href="#portfolioModal4">
+                                <div class="portfolio-hover">
+                                    <div class="portfolio-hover-content"><i class="fas fa-plus fa-3x"></i></div>
+                                </div>
+                                <img class="img-fluid" src="static/assets/img/portfolio/4.JPG" alt="..." />
+                            </a>
+                           <!-- <div class="portfolio-caption">
+                                <div class="portfolio-caption-heading">Achievements y líneas futuras</div>
+                                
+                            </div>-->
+                        </div>
+                    </div>
+                    
+  
+                </div>
+            </div>
+        </section>
+        <!-- Portfolio item 1 modal popup-->
+        <div class="portfolio-modal modal fade" id="portfolioModal1" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    
+                    <div class="container">
+                        <div class="">
+                            <div class="">
+                                <div class="container mt-3 pt-5">
+                                    <!-- Project details-->
+                                    <div id="carousel1" class="carousel slide" data-ride="carousel">
+                                        <div class="carousel-inner">
+                                            <div class="carousel-item active">
+                                                <img src="static/assets/img/portfolio/DIAPOSITIVA1a.JPG"  alt="..." class="d-block w-100">
+                                            </div>
+                                            <div class="carousel-item">
+                                                <img src="static/assets/img/portfolio/DIAPOSITIVA2a.JPG"  alt="..." class="d-block w-100">
+                                            </div>
+                                            <div class="carousel-item">
+                                                <img src="static/assets/img/portfolio/DIAPOSITIVA3a.JPG"  alt="..." class="d-block w-100">
+                                            </div>
+                                          
+                                        </div>
+                                        <button class="carousel-control-prev" type="button" data-bs-target="#carousel1" data-bs-slide="prev">
+                                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                            <span class="visually-hidden">Previous</span>
+                                          </button>
+                                          <button class="carousel-control-next" type="button" data-bs-target="#carousel1" data-bs-slide="next">
+                                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                            <span class="visually-hidden">Next</span>
+                                          </button>
+                                    </div>
+                                    <button class="btn btn-secondary btn-xl text-uppercase" data-bs-dismiss="modal" type="button">
+                                        <i class="fas fa-times me-1"></i>
+                                        Cerrar 
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Portfolio item 2 modal popup-->
+        <div class="portfolio-modal modal fade" id="portfolioModal2" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    
+                    <div class="container">
+                        <div class="">
+                            <div class="">
+                                <div class="container mt-3 pt-5">
+                                    <!-- Project details-->
+                                    <div id="carousel2" class="carousel slide" data-ride="carousel">
+                                        <div class="carousel-inner">
+                                            <div class="carousel-item active">
+                                                <img src="static/assets/img/portfolio/Diapositiva1b.JPG"  alt="..." class="d-block w-100">
+                                            </div>
+                                            <div class="carousel-item">
+                                                <img src="static/assets/img/portfolio/Diapositiva2b.JPG"  alt="..." class="d-block w-100">
+                                            </div>
+                                            <div class="carousel-item">
+                                                <img src="static/assets/img/portfolio/Diapositiva3b.JPG"  alt="..." class="d-block w-100">
+                                            </div>
+                                            <div class="carousel-item">
+                                                <img src="static/assets/img/portfolio/Diapositiva4b.JPG"  alt="..." class="d-block w-100">
+                                            </div>
+                                          
+                                        </div>
+                                        <button class="carousel-control-prev" type="button" data-bs-target="#carousel2" data-bs-slide="prev">
+                                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                            <span class="visually-hidden">Previous</span>
+                                          </button>
+                                          <button class="carousel-control-next" type="button" data-bs-target="#carousel2" data-bs-slide="next">
+                                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                            <span class="visually-hidden">Next</span>
+                                          </button>
+                                    </div>
+                                    <button class="btn btn-secondary btn-xl text-uppercase" data-bs-dismiss="modal" type="button">
+                                        <i class="fas fa-times me-1"></i>
+                                        Cerrar 
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Portfolio item 3 modal popup-->
+        <div class="portfolio-modal modal fade" id="portfolioModal3" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    
+                    <div class="container">
+                        <div class="">
+                            <div class="">
+                                <div class="container mt-3 pt-5">
+                                    <!-- Project details-->
+                                    
+                                    <div id="carousel3" class="carousel slide" data-ride="carousel">
+                                        <div class="carousel-inner">
+                                            <div class="carousel-item active">
+                                                <img src="static/assets/img/portfolio/Diapositiva1c.JPG"  alt="..." class="d-block w-100">
+                                            </div>
+                                            <div class="carousel-item">
+                                                <img src="static/assets/img/portfolio/Diapositiva2c.JPG"  alt="..." class="d-block w-100">
+                                            </div>
+                                            <div class="carousel-item">
+                                                <img src="static/assets/img/portfolio/Diapositiva3c.JPG"  alt="..." class="d-block w-100">
+                                            </div>
+                                            <div class="carousel-item">
+                                                <img src="static/assets/img/portfolio/Diapositiva4c.JPG"  alt="..." class="d-block w-100">
+                                            </div>
+                                          
+                                        </div>
+                                        <button class="carousel-control-prev" type="button" data-bs-target="#carousel3" data-bs-slide="prev">
+                                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                            <span class="visually-hidden">Previous</span>
+                                          </button>
+                                          <button class="carousel-control-next" type="button" data-bs-target="#carousel3" data-bs-slide="next">
+                                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                            <span class="visually-hidden">Next</span>
+                                          </button>
+                                    </div>
+                                    <button class="btn btn-secondary btn-xl text-uppercase" data-bs-dismiss="modal" type="button">
+                                        <i class="fas fa-times me-1"></i>
+                                        Cerrar 
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Portfolio item 4 modal popup-->
+        <div class="portfolio-modal modal fade" id="portfolioModal4" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    
+                    <div class="container">
+                        <div class="">
+                            <div class="">
+                                <div class="container mt-3 pt-5">
+                                    <!-- Project details-->
+                                    
+                                    
+                                    <div id="carousel4" class="carousel slide" data-ride="carousel">
+                                        <div class="carousel-inner">
+                                            <div class="carousel-item active">
+                                                <img src="static/assets/img/portfolio/Diapositiva1d.JPG"  alt="..." class="d-block w-100">
+                                            </div>
+                                           
+                                          
+                                        </div>
+                                      
+                                    </div>
+                                    <button class="btn btn-secondary btn-xl text-uppercase" data-bs-dismiss="modal" type="button">
+                                        <i class="fas fa-times me-1"></i>
+                                        Cerrar 
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+       
+    
+        <!-- Footer-->
+        <footer class="bg-light py-5">
+            <div class="container px-4 px-lg-5"><div class="small text-center text-muted">Copyright &copy; 2021 - Proyecto creado para la asignatura de Programación Gráfica en Python y JavaScript </div></div>
+        </footer>
+
+
+        
+        <!--Musica fondo-->
+          
+      <audio id="music" hidden src="static/sound/music.mp3" type="audio/mpeg"></audio>
+      <script>
+          
+        var un_mute = document.getElementById('un-mute');
+
+         un_mute.onclick = function() {
+            ;
+        };
+       document.getElementById("un-mute").addEventListener("click", function(){
+	   var audio = document.getElementById('music');
+       if(this.className == 'is-playing'){
+       this.className = "";
+    
+       audio.pause();
+      }else{
+      this.className = "is-playing";
+    
+      audio.play();
+      
+       }
+
+      });
+    
+      </script>
+        
+        <!-- Bootstrap core JS-->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"></script>
+        
+
+        <!--Código Babylon-->
+        <script>
+            var canvas = document.getElementById("renderCanvas");
+    
+            ///// Codigo para evitar que el scrollbar se mueva al hacer zoom en el canvas Babylon////
+            document.getElementById( "renderCanvas" ).onwheel = function(event){
+            event.preventDefault();
+             };
+        
+            document.getElementById( "renderCanvas" ).onmousewheel = function(event){
+            event.preventDefault();
+             };
+            /////////////////////////////////////////////////////////////////////////////////////777/
+          
+            var MotorBabylon = null;
+            var Escenario = null;
+            var sceneToRender = null;
+            var createDefaultEngine = function() { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true,  disableWebGL2Support: false}); };
+            var createScene = function () {
+                var Escenario = new BABYLON.Scene(MotorBabylon);
+            
+                var camera = new BABYLON.ArcRotateCamera("Camera", 1, 0.8, 10, new BABYLON.Vector3(0, 0, 0), Escenario);
+                camera.attachControl(canvas, true);
+    
+                //Funcion Meteorito
+                document.getElementById("boton").addEventListener("click",function () {
+                        
+         
+                        
+                        //Meteorito
+                        var TamañoMeteorito=0.5;
+                        Meteorito.visibility=1;
+                        Bomba.visibility=1;
+                        
+                        
+                        
+    
+                        //Luz de impacto
+                         
+                         LuzTierra.specular = new BABYLON.Color3(1, 0, 0);
+                         LuzTierra.position = new BABYLON.Vector3(PuntodeImpacto[0]*1.5,PuntodeImpacto[1]*1.5,PuntodeImpacto[2]*1.5);
+                         LuzTierra.visibility=1;
+
+                         if( (MatrizMovimiento[0][0])/(MatrizMovimiento[0][2]) <=-15.35 && 
+                         (MatrizMovimiento[0][0])/(MatrizMovimiento[0][2]) >= -15.40 &&
+                         (MatrizMovimiento[0][0])/(MatrizMovimiento[0][1]) >= 1.17 &&
+                         (MatrizMovimiento[0][0])/(MatrizMovimiento[0][1]) <= 1.175
+                            ){
+                            A=1;
+                            var celebracion = new BABYLON.Sound("Music", "static/sound/Celebracion.mp3", Escenario, function(){
+                            celebracion.play()});
+                        }
+                        
+    
+                        
+                
+                        
+                        //Bucle de asignacion de la trayectoria del meteorito
+                        var keysxmeteo = [];
+                        var keysymeteo = [];
+                        var keyszmeteo = [];
+                        var Meteoritofallx = new BABYLON.Animation("CaidaMeteorito","position.x",0.5,BABYLON.Animation.ANIMATIONTYPE_FLOAT,BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+                        var Meteoritofally = new BABYLON.Animation("CaidaMeteorito","position.y",0.5,BABYLON.Animation.ANIMATIONTYPE_FLOAT,BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+                        var Meteoritofallz = new BABYLON.Animation("CaidaMeteorito","position.z",0.5,BABYLON.Animation.ANIMATIONTYPE_FLOAT,BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+                        var t;
+                        var tv;
+    
+                        for (let step = 0; step < MatrizMovimiento.length; step++) {
+                            tv= 10/trayectoriamisil.length;
+                            t=step*tv;
+                        keysxmeteo.push({
+                             frame: t,
+                             value: MatrizMovimiento[step][0]
+                        });
+                        keysymeteo.push({
+                             frame: t,
+                             value: MatrizMovimiento[step][1]
+                        });
+                        keyszmeteo.push({
+                             frame: t,
+                             value: MatrizMovimiento[step][2]
+                        });
+                    }
+                        Meteoritofallx.setKeys(keysxmeteo);
+                        Meteorito.animations.push(Meteoritofallx);
+                        Meteoritofally.setKeys(keysymeteo);
+                        Meteorito.animations.push(Meteoritofally);
+                        Meteoritofallz.setKeys(keyszmeteo);
+                        Meteorito.animations.push(Meteoritofallz);
+                        
+                        var animationGroup = new BABYLON.AnimationGroup("my group");
+                    
+                        //Grupo de animacion para el meteorito
+                        animationGroup.addTargetedAnimation(Meteoritofallx, Meteorito);
+                        animationGroup.addTargetedAnimation(Meteoritofally, Meteorito);
+                        animationGroup.addTargetedAnimation(Meteoritofallz, Meteorito);
+                                            
+    
+                        //Bucle de asignacion de la trayectoria y direccion del misil
+                        var keysxrocket = [];
+                        var keysyrocket = [];
+                        var keyszrocket = [];
+                        var keysxorientation = [];
+                        var keysyorientation = [];
+                        var keyszorientation = [];
+                        var t=0;
+                        var Misilfallx = new BABYLON.Animation("CaidaMisilx","position.x",0.5,BABYLON.Animation.ANIMATIONTYPE_FLOAT,BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+                        var Misilfally = new BABYLON.Animation("CaidaMisily","position.y",0.5,BABYLON.Animation.ANIMATIONTYPE_FLOAT,BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+                        var Misilfallz = new BABYLON.Animation("CaidaMisilz","position.z",0.5,BABYLON.Animation.ANIMATIONTYPE_FLOAT,BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+    
+                        
+                        
+    
+                        for (let step = 0; step < trayectoriamisil.length; step++) {
+                            tv= 10/trayectoriamisil.length;
+                            t=step*tv;
+                        keysxrocket.push({
+                             frame: t,
+                             value: trayectoriamisil[step][0]
+                        });
+                        keysyrocket.push({
+                             frame: t,
+                             value: trayectoriamisil[step][1]
+                        });
+                        keyszrocket.push({
+                             frame: t,
+                             value: trayectoriamisil[step][2]
+                        });
+                    }
+                   
+                        
+                        
+                        Misilfallx.setKeys(keysxrocket);
+                        Misil.animations.push(Misilfallx);
+                        Misilfally.setKeys(keysyrocket);
+                        Misil.animations.push(Misilfally);
+                        Misilfallz.setKeys(keyszrocket);
+                        Misil.animations.push(Misilfallz);
+    
+                       
+                        
+    
+                    
+                        //Grupo de animacion para el misil
+    
+                        animationGroup.addTargetedAnimation(Misilfallx, Bomba);
+                        animationGroup.addTargetedAnimation(Misilfally, Bomba);
+                        animationGroup.addTargetedAnimation(Misilfallz, Bomba);
+    
+                      
+                        
+    
+                        
+                // Make sure to normalize animations to the same timeline
+                        animationGroup.normalize(0, 10);
+                        animationGroup.play(true);
+                   });
+                
+    
+                   ///////////////////////////////////////////////////////////////////////////////////////////////////////
+                  
+                 
+    
+                 
+                 
+               ////////////////////////////////////////////////// ELEMENTOS BASICOS ///////////////////////////////////////77
+    
+    
+                var Meteorito = BABYLON.Mesh.CreateSphere("Meteoro",100,0.5,Escenario);
+                Meteorito.material = new BABYLON.StandardMaterial("matmet", Escenario);
+                Meteorito.visibility=0;
+                Meteorito.material.diffuseTexture = new BABYLON.Texture("/static/textures/meteorito.jpg",Escenario);
+    
+                var Misil = BABYLON.Mesh.CreateSphere("Misil",100,0.5,Escenario);
+                Misil.material = new BABYLON.StandardMaterial("matmet", Escenario);
+                Misil.visibility=0;
+    
+                var LuzTierra = new BABYLON.PointLight("luztierra",PuntodeImpacto, Escenario);
+                LuzTierra.visibility=0;
+    
+                var RadioSol=100;
+                var OrbitaSol=500;
+                var SolStart = new BABYLON.Vector3(0, 0, OrbitaSol);
+                var LuzSol = new BABYLON.PointLight("luzsol", new BABYLON.Vector3(0, 0, OrbitaSol-RadioSol-1), Escenario);
+                
+                var Sol = BABYLON.Mesh.CreateSphere("Sol", 100, RadioSol, Escenario);
+                Sol.material = new BABYLON.StandardMaterial("SolMaterial", Escenario);
+                Sol.material.diffuseTexture = new BABYLON.Texture("static/textures/8k_sun.jpg", Escenario);
+    
+                    
+                var Tierra = BABYLON.Mesh.CreateSphere("tierra", 100, 2, Escenario);
+                PuntoTierra = new BABYLON.Vector3(0,0,0);
+                Tierra.position = PuntoTierra;
+                Tierra.material = new BABYLON.StandardMaterial("MaterialTierra", Escenario);
+                Tierra.material.diffuseTexture = new BABYLON.Texture('static/textures/EarthfromSpace.png', Escenario);
+    
+                
+    
+                ////////////////////////////////////////////// BOMBA ////////////////////////////////////////
+    
+                var mat1 = new BABYLON.StandardMaterial('mat1', Escenario);
+                
+    
+                var Scale = 0.3;
+    
+                var sphere = BABYLON.MeshBuilder.CreateSphere("sphere1", {diameter: 2, segments: 16}, Escenario);
+                sphere.material = mat1;
+                sphere.position.y = 0;
+    
+                const cone = BABYLON.MeshBuilder.CreateCylinder("cylinder", {diameter:2},Escenario);
+                cone.material = mat1;
+                cone.position = new BABYLON.Vector3(0,1,0);
+                cone.scaling.x = Scale;
+                cone.scaling.y = Scale;
+                cone.scaling.z = Scale;
+    
+                var Bomba = BABYLON.Mesh.MergeMeshes([sphere, cone]);
+                Bomba.scaling.x=0.2;
+                Bomba.scaling.y=0.2;
+                Bomba.scaling.z=0.2;
+                Bomba.position=new BABYLON.Vector3(0,2,0);
+                Bomba.rotation.z=-0.5;
+                Bomba.position.y=3;
+                Bomba.material.diffuseTexture = new BABYLON.Texture("static/textures/logo-politecnica.jpg", Escenario);
+                Bomba.visibility=0;
+    
+                //////////////////////////////////////////////////// TRASLACION //////////////////////////////////////////77
+                
+                var GiroTierra = new BABYLON.Animation("Rotacion","rotation.y",0.1,BABYLON.Animation.ANIMATIONTYPE_FLOAT,BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+                var keys = [];
+    
+                keys.push({
+                 frame: 0,
+                 value: 1
+                });
+                keys.push({
+                 frame:500,
+                 value:2*Math.PI*100
+                });
+                 GiroTierra.setKeys(keys);
+                 Tierra.animations.push(GiroTierra);
+                 Escenario.beginAnimation(Tierra,0,500,true);
+                 
+    
+         
+                var CentrodeGiro = new BABYLON.Vector3(0, 0, 0);
+                var axis = new BABYLON.Vector3(0, 1, 0);
+        
+    
+                var pivot = new BABYLON.TransformNode("root");
+                pivot.position = CentrodeGiro; 
+                Sol.parent = pivot;
+                LuzSol.parent = pivot;
+                Sol.position = SolStart;
+    
+    
+               
+    
+                var Derrota=0;
+                A=0;
+                B=0;
+    
+                var angle = 0.0005;
+                    Escenario.registerBeforeRender(function () {
+                        
+                        pivot.rotate(axis, angle, BABYLON.Space.WORLD);
+                        
+                        ///////////// Pantallas de Victoria y Derrota  ///////////////////
+    
+                        
+    
+                        // Coordenadas para el acto secreto: x=500000 y=426257 z=-32510 
+                        
+                        
+                       
+                        
+                            
+                        if (Meteorito.intersectsMesh(Tierra, false)) {
+                            
+                            
+                            Derrota=1;
+                            Meteorito.position=new BABYLON.Vector3(10,10,10);
+                            Meteorito.visibility=0;
+                            LuzTierra.visibility=0;
+                            Bomba.visibility=0;
+                            // PantallaDerrota.visibility=1;
+                            BABYLON.ParticleHelper.CreateAsync("explosion", Escenario).then((set) => {
+                              set.systems.forEach(s => {
+                              s.disposeOnStop = true;
+                              });
+                              set.emitterNode=new BABYLON.Vector3(PuntodeImpacto[0],PuntodeImpacto[1],PuntodeImpacto[2]);
+                              set.start();
+                              });
+                              var explosion = new BABYLON.Sound("Music", "static/sound/Explosion.mp3", Escenario, function(){
+                              explosion.play()});
+                              var derrotas = new BABYLON.Sound("Music", "static/sound/derrota.mp3", Escenario, function(){
+                              derrotas.play()});
+                            
+                         
+                         
+                        } else if (Meteorito.intersectsMesh(Bomba, false)) {
+    
+                            Derrota=0;
+                            Meteorito.position=new BABYLON.Vector3(5,5,5);
+                            Meteorito.visibility=0;
+                            Bomba.visibility=0;
+                            LuzTierra.visibility=0;
+                            BABYLON.ParticleHelper.CreateAsync("explosion", Escenario).then((set) => {
+                              set.systems.forEach(s => {
+                              s.disposeOnStop = true;
+                              });
+                              set.emitterNode=new BABYLON.Vector3(MatrizMovimiento[MatrizMovimiento.length-1][0],MatrizMovimiento[MatrizMovimiento.length-1][1],MatrizMovimiento[MatrizMovimiento.length-1][2]);
+                              set.start();
+                              });
+                              var explosion = new BABYLON.Sound("Music", "static/sound/Explosion.mp3", Escenario, function(){
+                            explosion.play()});
+                              }
+    
+                            // var dir = camera.getTarget().subtract(camera.position);dir.normalize();dir.scaleInPlace(7);
+                            // PantallaVictoria.position=camera.position.add(dir);
+                            
+                        
+    
+                    });
+                
+                  
+                             
+        
+                   
+           
+            
+          
+            
+                
+                /////////////////////////////// FONDO ESPACIAL ///////////////////////////////////
+             
+                var skybox = BABYLON.MeshBuilder.CreateBox("Space", {size:9000}, Escenario);
+                var skyboxMaterial = new BABYLON.StandardMaterial("Spacestars", Escenario);
+                skyboxMaterial.backFaceCulling = false;
+                skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("static/textures/Space3", Escenario);
+                skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+                skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
+                     skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+                     skybox.material = skyboxMaterial;
+           
+                     skybox.parent = pivot;
+        
+    
+             
+               
+    
+                
+                
+            
+                
+            
+             
+            
+            
+                return  Escenario;
+            }
+                
+    
+                    var MotorBabylon;
+                    var Escenario;
+                    initFunction = async function() {               
+                        var asyncEngineCreation = async function() {
+                            try {
+                            return createDefaultEngine();
+                            } catch(e) {
+                            console.log("the available createEngine function failed. Creating the default engine instead");
+                            return createDefaultEngine();
+                            }
+                        }
+    
+                        MotorBabylon = await asyncEngineCreation();
+            if (!MotorBabylon) throw 'engine should not be null.';
+            Escenario = createScene();};
+            initFunction().then(() => {sceneToRender = Escenario        
+                MotorBabylon.runRenderLoop(function () {
+                    if (sceneToRender && sceneToRender.activeCamera) {
+                        sceneToRender.render();
+                    }
+                });
+            });
+    
+            // Resize
+            window.addEventListener("resize", function () {
+                MotorBabylon.resize();
+            });
+        </script>
+</body>
+
+        <!-- Core theme JS-->
+        <script src="static/js/scripts.js"></script>
+        <!--Jqery para validacion-->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.0/jquery.validate.min.js"></script>
+    </body>
+</html>
